@@ -5,9 +5,11 @@ const fs = require('fs');
 exports.createSauce = (req, res, next) => {
     const sauceObjet = JSON.parse(req.body.sauce);
   const sauce = new Sauce({
+    
     ...sauceObjet,
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   });
+  
   sauce
     .save()
     .then(() => {
@@ -89,7 +91,7 @@ exports.likeSauce = async(req, res , next)  => {
 
   let like = req.body.like;
   let userId = req.body.userId;
-
+  
   //Cherche la sauce dans la base de donnée
   let sauce = await Sauce.findOne({
     _id: req.params.id
@@ -124,20 +126,25 @@ exports.likeSauce = async(req, res , next)  => {
     
   }
       
-  if (like === 0){
+  if (like === 0 && sauce.usersDisliked.includes(userId)){
     
-    sauce.usersDisliked.splice(userId);
+    sauce.usersDisliked.remove(userId);
     sauce.dislikes-=1
-    sauce.usersLiked.splice(userId);
+
+  }else if (like === 0 && sauce.usersLiked.includes(userId)) {
+
+    sauce.usersLiked.remove(userId);
     sauce.likes-=1
-      
-      
+
   }
+      
+      
+  
     
   console.log('helloo', sauce);
   //on enregistre la sauce en base
   Sauce.updateOne({ _id: req.params.id }, { ...{
-    likes: sauce.likes, 
+                    likes: sauce.likes, 
                     dislikes: sauce.dislikes, 
                     usersLiked: sauce.usersLiked,
                     usersDisliked: sauce.usersDisliked}, _id: req.params.id })
