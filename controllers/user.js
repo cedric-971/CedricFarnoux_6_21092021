@@ -2,12 +2,14 @@ const bcrypt = require('bcrypt');
 
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const cryptojs = require("crypto-js");
 
 exports.signup = (req, res, next) => {
+  const emailCrypt = cryptojs.HmacSHA256(req.body.email,"cle_super_secrete").toString();
     bcrypt.hash(req.body.password, 10)
     .then(hash => {
       const user = new User({
-        email: req.body.email,
+        email: emailCrypt,
         password: hash
       });
       user.save()
@@ -19,8 +21,8 @@ exports.signup = (req, res, next) => {
 
 
 exports.login = (req, res, next) => {
-
-    User.findOne({ email: req.body.email })
+  const emailCrypt = cryptojs.HmacSHA256(req.body.email,"cle_super_secrete").toString();
+    User.findOne({ email: emailCrypt})
     .then(user => {
       if (!user) {
         return res.status(401).json({ error: 'Utilisateur non trouvé !' });
@@ -34,7 +36,7 @@ exports.login = (req, res, next) => {
             userId: user._id,
             token: jwt.sign(
               { userId: user._id },
-              'RANDOM_TOKEN_SECRET',
+              process.env.JWT_KEY_SECRET,
               { expiresIn: '24h' }
             )
           });

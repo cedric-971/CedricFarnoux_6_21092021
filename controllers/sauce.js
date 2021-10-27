@@ -1,4 +1,4 @@
-const { json } = require("body-parser");
+//const { json } = require("body-parser");
 const Sauce = require("../models/Sauce");
 const fs = require("fs");
 
@@ -59,12 +59,12 @@ exports.modifySauce = (req, res, next) => {
   Sauce.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
     .then(() => {
       res.status(200).json({
-        message: "Thing updated successfully!",
+        message: "Sauce updated successfully!",
       });
     })
     .catch((error) => {
       res.status(400).json({
-        error: error,
+        error: error ,
       });
     });
 };
