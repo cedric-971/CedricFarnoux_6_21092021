@@ -1,4 +1,3 @@
-//const { json } = require("body-parser");
 const Sauce = require("../models/Sauce");
 const fs = require("fs");
 
@@ -56,7 +55,13 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-  Sauce.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+  const sauceObject = req.file ?
+  {
+    ...JSON.parse(req.body.sauce),
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+  } : { ...req.body };
+
+  Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
     .then(() => {
       res.status(200).json({
         message: "Sauce updated successfully!",
@@ -64,7 +69,7 @@ exports.modifySauce = (req, res, next) => {
     })
     .catch((error) => {
       res.status(400).json({
-        error: error ,
+        error: error,
       });
     });
 };
@@ -86,13 +91,10 @@ exports.likeSauce = async (req, res, next) => {
   let like = req.body.like;
   let userId = req.body.userId;
 
-  //Cherche la sauce dans la base de donnée
   let sauce = await Sauce.findOne({
     _id: req.params.id,
   });
 
-  //Par precaution au cas ou les likes/dislikes seraient vides
-  //on les initialises
   if (!sauce.likes) {
     sauce.likes = 0;
   }
@@ -101,7 +103,6 @@ exports.likeSauce = async (req, res, next) => {
   }
 
   if (like === 1) {
-    //sinon on incremente les like et on rajoute l'utilisateur dans le tableau des likes
     sauce.likes += 1;
     sauce.usersLiked.push(userId);
   } else if (like === -1) {
@@ -115,8 +116,8 @@ exports.likeSauce = async (req, res, next) => {
     sauce.likes -= 1;
   }
 
-  console.log("helloo", sauce);
-  //on enregistre la sauce en base
+  console.log(sauce);
+
   Sauce.updateOne(
     { _id: req.params.id },
     {
